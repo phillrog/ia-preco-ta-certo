@@ -1,0 +1,6 @@
+streamlit 
+pytesseract 
+pillow 
+langchain-google-genai 
+langchain-core 
+streamlit-back-camera-input
