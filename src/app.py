@@ -30,9 +30,7 @@ def main():
         # Header com Clamp e Shimmer
         st.markdown('<div class="header">IA Preço Tá Certo ?</div>', unsafe_allow_html=True)
         st.markdown('<div class="titulo-projeto">🛒 Assistente de Compras Inteligente</div>', unsafe_allow_html=True)
-    
-    st.divider()
-    
+      
     if "toast_msg" in st.session_state and st.session_state.toast_msg:
         st.toast(st.session_state.toast_msg["texto"], icon=st.session_state.toast_msg["icon"])
         st.session_state.toast_msg = None 
@@ -67,7 +65,18 @@ def main():
 
     # Área de envio cadastro etiquetas
     with tab1:
-        st.markdown('<h3>📷 Tire a foto da etiqueta</h3>', unsafe_allow_html=True)
+        total_atual = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)
+        
+        header_tab1 = f"""
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">📷 Tire a foto da etiqueta</h3>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.9rem; color: #666;">Total no Carrinho:</span><br>
+                    <strong style="font-size: 1.4rem; color: #008000;">{formatar_moeda(total_atual)}</strong>
+                </div>
+            </div>
+        """
+        st.markdown(header_tab1, unsafe_allow_html=True)
         modo = st.radio("Opções de entrada:", ["Câmera de Trás", "Upload manual"], index=1, horizontal=True, key="m_g")
         img_etiqueta = back_camera_input(key="c_g") if modo == "Câmera" else st.file_uploader("Upload", key="u_g")
         
@@ -157,8 +166,17 @@ def main():
             ver_idx_ajustado = st.selectbox("Visualizar foto do item:", range(len(df)), format_func=lambda x: f"{df.iloc[x]['Produto']} ({df.iloc[x]['Adicionado em']})")
             if st.button("👁️ Ver Foto"):
                 item = df.iloc[ver_idx_ajustado]
-                st.session_state.zoom_image = {"b64": item["_img_b64"], "nome": item["Produto"], "data": item["Adicionado em"]}
-                st.rerun()
+                
+                # checa se existe imagem antes de mostrar
+                if "_img_b64" in item and item["_img_b64"]:
+                    st.session_state.zoom_image = {
+                        "b64": item["_img_b64"], 
+                        "nome": item["Produto"], 
+                        "data": item["Adicionado em"]
+                    }
+                    st.rerun()
+                else:
+                    st.warning(f"O item '{item['Produto']}' foi adicionado manualmente e não possui imagem.")
             
             st.divider()
             
