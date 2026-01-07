@@ -1,4 +1,5 @@
-# **IA Preço Tá Certo?**
+<img width="644" height="194" alt="Captura de tela 2026-01-07 160850" src="https://github.com/user-attachments/assets/e96a763d-276e-4cd4-b282-62a893511624" />
+
 
 O **IA Preço Tá Certo?** é um assistente de compras inteligente que utiliza o poder multimodal do Google Gemini para ajudar você a acompanhar sua compra em tempo real. A ferramenta interpreta fotos de etiquetas para extrair descrições e valores, consolidando tudo em uma lista que mostra o valor aproximado a pagar. Além de organizar seus gastos, o assistente atua na conferência final: se ele encontrar algo estranho ou divergente entre os preços anotados e o cupom fiscal, ele irá te mostrar imediatamente para que você possa conferir.
 
