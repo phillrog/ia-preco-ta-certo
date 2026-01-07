@@ -69,12 +69,19 @@ class LangchainGeminiService:
         </instrucoes_auditoria>
 
         <formato_saida_esperado>
-        Retorne APENAS tags XML para cada item analisado:
-        <item>
-            <n>NOME DO PRODUTO</n>
-            <s>STATUS (OK, ERRO DE PREÇO, NÃO ENCONTRADO)</s>
-            <d>PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - [MENSAGEM]</d>
-        </item>
+        Retorne a resposta estritamente no formato XML abaixo. 
+        Não adicione texto antes ou depois do XML:
+
+        <resultado>
+            <itens>
+                <item>
+                    <n>NOME DO PRODUTO</n>
+                    <s>STATUS (Use apenas: OK, ERRO DE PREÇO ou NÃO ENCONTRADO)</s>
+                    <d>PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - [MENSAGEM]</d>
+                </item>
+            </itens>
+            <total_nota>VALOR_TOTAL_PAGO_NO_CUPOM</total_nota>
+        </resultado>
         </formato_saida_esperado>
         """
 
