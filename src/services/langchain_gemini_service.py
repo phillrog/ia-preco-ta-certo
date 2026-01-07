@@ -30,24 +30,45 @@ class LangchainGeminiService:
         response = self.llm.invoke([message])
         return str(response.content), img_base64
 
-    def comparar_nota_etiquetas(self, df_items: pd.DataFrame, imagem_nota: Image):
+    def comparar_nota_etiquetas(self, df_carrinho, imagem_nota: Image):
         img_base64 = self._converter_img_base64(imagem_nota)
-        # Limpa o DataFrame
-        cols_to_drop = [c for c in ['_img_b64', 'timestamp'] if c in df_items.columns]
-        lista_texto = df_items.drop(columns=cols_to_drop).to_string(index=False)
         
-        prompt = (
-            f"Minha lista da prateleira (VALORES CORRETOS):\n{lista_texto}\n\n"
-            "Analise da NOTA FISCAL anexo e compare com a minha lista. REGRAS:\n"
-            "1. Compare o valor unitário (ou por kg) de cada item.\n"
-            "2. Se o valor na NOTA FISCAL for MAIOR que o valor na PRATELEIRA, Status = 'ERRADO'.\n"
-            "3. Se o valor no NOTA FISCAL for IGUAL ou MENOR que na PRATELEIRA, Status = 'OK'.\n"
-            "4. Na Observação, coloque SEMPRE: 'PRATELEIRA: R$ X | NOTA FISCAL: R$ Y'.\n"
-            "Retorne APENAS tags XML: <item><n>Nome</n><s>Status</s><d>Observação</d></item>"
-        )
+        # Prepara a lista
+        lista_itens = df_carrinho[['id', 'Produto', 'Preço Prateleira', 'Qtd', 'Unidade']].to_dict(orient='records')
+        
+        # XML Tagging
+        prompt = f"""
+        Você é um auditor de preços rigoroso. Sua tarefa é realizar o cruzamento de dados entre os itens da prateleira e o cupom fiscal.
+
+        <contexto_lista_prateleira>
+        {lista_itens}
+        </contexto_lista_prateleira>
+
+        <instrucoes_auditoria>
+        1. ANALISE UNITÁRIA: Processe cada item dentro de <contexto_lista_prateleira> individualmente.
+        2. CONFERÊNCIA DE REPETIDOS: Se houver produtos idênticos, valide cada ocorrência separadamente contra o cupom fiscal.
+        3. PREÇO EXATO: Compare centavo por centavo. Qualquer divergência gera Status 'ERRO DE PREÇO'.
+        4. FORMATAÇÃO DE MOEDA: Use o padrão brasileiro (R$ 0,00) com vírgula para centavos nas descrições.
+        5. PADRÃO DE OBSERVAÇÃO: A tag <d> deve seguir rigorosamente este modelo:
+        - Se estiver correto: "PRATELEIRA R$ X,XX | CUPOM R$ X,XX - Não houve divergência"
+        - Se houver erro: "PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - Divergência de R$ Z,ZZ"
+        - Se não encontrar: "Produto não localizado no cupom fiscal"
+        </instrucoes_auditoria>
+
+        <formato_saida_esperado>
+        Retorne APENAS tags XML:
+        <item>
+            <n>Nome do Produto</n>
+            <s>Status (OK, ERRO DE PREÇO, NÃO ENCONTRADO)</s>
+            <d>PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - [Mensagem]</d>
+        </item>
+        </formato_saida_esperado>
+        """
+
         message = HumanMessage(content=[
             {"type": "text", "text": prompt},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}}
         ])
+        
         response = self.llm.invoke([message])
-        return str(response.content)
+        return str(response.content)        

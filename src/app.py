@@ -110,6 +110,7 @@ def main():
                 if nome_in:
                     agora = datetime.now()
                     st.session_state.lista_dados.append({
+                        "id": agora.timestamp(),
                         "timestamp": agora,
                         "Adicionado em": agora.strftime("%d/%m/%Y %H:%M:%S"),
                         "Produto": nome_in, 
@@ -142,12 +143,13 @@ def main():
                 
                 # Seletores individuais para garantir largura e alinhamento
                 {'selector': 'th:nth-child(1), td:nth-child(1)', 'props': [('width', '5%'), ('text-align', 'center')]},
-                {'selector': 'th:nth-child(2), td:nth-child(2)', 'props': [('width', '15%'), ('text-align', 'center')]},
-                {'selector': 'th:nth-child(3), td:nth-child(3)', 'props': [('width', '35%'), ('text-align', 'left')]},
-                {'selector': 'th:nth-child(4), td:nth-child(4)', 'props': [('width', '12%'), ('text-align', 'right')]},
-                {'selector': 'th:nth-child(5), td:nth-child(5)', 'props': [('width', '8%'), ('text-align', 'right')]},
-                {'selector': 'th:nth-child(6), td:nth-child(6)', 'props': [('width', '8%'), ('text-align', 'center')]},
-                {'selector': 'th:nth-child(7), td:nth-child(7)', 'props': [('width', '17%'), ('text-align', 'right')]}
+                {'selector': 'th:nth-child(2), td:nth-child(2)', 'props': [('width', '5%'), ('display', 'none')]},
+                {'selector': 'th:nth-child(3), td:nth-child(3)', 'props': [('width', '15%'), ('text-align', 'center')]},
+                {'selector': 'th:nth-child(4), td:nth-child(4)', 'props': [('width', '35%'), ('text-align', 'left')]},
+                {'selector': 'th:nth-child(5), td:nth-child(5)', 'props': [('width', '12%'), ('text-align', 'right')]},
+                {'selector': 'th:nth-child(6), td:nth-child(6)', 'props': [('width', '8%'), ('text-align', 'right')]},
+                {'selector': 'th:nth-child(7), td:nth-child(7)', 'props': [('width', '8%'), ('text-align', 'center')]},
+                {'selector': 'th:nth-child(8), td:nth-child(8)', 'props': [('width', '17%'), ('text-align', 'right')]}
             ]
 
             # Gerar o HTML com a formatação
