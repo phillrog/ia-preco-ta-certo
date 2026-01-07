@@ -7,7 +7,7 @@ from datetime import datetime
 from streamlit_back_camera_input import back_camera_input
 
 from services.langchain_gemini_service import LangchainGeminiService
-from utils.utils import carregar_css, formatar_moeda, mensagem_erro_df, carregar_imagem_base64
+from utils.utils import carregar_css, formatar_moeda, mensagem_erro_df, carregar_imagem_base64, gerar_pdf_direto
 
 def main():
     st.set_page_config(page_title="IA Preço Tá Certo ?", layout="wide")
@@ -95,7 +95,7 @@ def main():
         img_etiqueta = back_camera_input(key="c_g") if modo == "Câmera de Trás" else st.file_uploader("Upload", key="u_g")
         
         if img_etiqueta and ("last_g" not in st.session_state or st.session_state.last_g != img_etiqueta):
-            with st.spinner("Lendo etiqueta..."):
+            with st.spinner("Analisando... Por favor aguarde!"):
                 res, b64 = langchain_gemini_service.verifica_etiqueta(Image.open(img_etiqueta))
                 if "N/A" in res:
                     st.session_state.toast_msg = {"texto": "Não identifiquei o preço.", "icon": "⚠️"}
@@ -215,24 +215,42 @@ def main():
             nota_f = back_camera_input(key="c_c") if modo_c == "Câmera de Trás" else st.file_uploader("Upload manual", key="u_c")
             
             if nota_f and ("last_c" not in st.session_state or st.session_state.last_c != nota_f):
-                with st.spinner("Comparando..."):
+                with st.spinner("Comparando... Por favor aguarde!"):
+                    # Para exportação
+                    img_cupom_b64 = langchain_gemini_service._converter_img_base64(Image.open(nota_f))
+                    st.session_state.img_cupom_b64 = img_cupom_b64
+                    
+                    st.session_state.total_cupom_lido = 0.0
                     df_para_comparar = pd.DataFrame(st.session_state.lista_dados)
                     
                     xml = langchain_gemini_service.comparar_nota_etiquetas(df_para_comparar, Image.open(nota_f))
+                    match_total = re.search(r'<total_nota>(.*?)</total_nota>', xml, re.S)
+                    if match_total:
+                        try:
+                            txt_total = match_total.group(1).upper().replace('R$', '').replace(' ', '')
+                            txt_total = txt_total.replace('.', '').replace(',', '.')
+                            st.session_state.total_cupom_lido = float(txt_total)
+                        except:
+                            st.session_state.total_cupom_lido = 0.0
+                            
                     items = re.findall(r'<item>(.*?)</item>', xml, re.S)
                     res_c = []
                     for it in items:
                         n = re.search(r'<n>(.*?)</n>', it, re.S)
                         s = re.search(r'<s>(.*?)</s>', it, re.S)
                         d = re.search(r'<d>(.*?)</d>', it, re.S)
+                        
+                        status_texto = s.group(1).strip().upper() if s else "NÃO ENCONTRADO"
+                        
                         res_c.append({
                             "Produto": n.group(1).strip() if n else "", 
-                            "Status": s.group(1).strip() if s else "", 
+                            "Status": status_texto, 
                             "Observação": d.group(1).strip() if d else ""
                         })
+                    
                     st.session_state.res_comp = res_c
                     st.session_state.last_c = nota_f
-                    st.session_state.toast_msg = {"texto": "Comparação concluída!", "icon": "📊"}
+                    st.session_state.toast_msg = {"texto": "Conferência concluída!", "icon": "📊"}
                     st.rerun()
 
             if "res_comp" in st.session_state:
@@ -269,11 +287,52 @@ def main():
                     hide_index=True 
                 )
                 
-                if total_div == 0 and total_ok > 0:
-                    st.balloons()
-                    st.success("🎉 Tudo certinho! Nenhum erro encontrado.")
+                total_carrinho = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)
+                               
+                total_cupom = st.session_state.get("total_cupom_lido", 0.0) 
 
-                # Só vai aparecer após analisar
+                st.markdown('<div class="sub-header">⚖️ Validação de Totais</div>', unsafe_allow_html=True)
+                
+                c1, c2 = st.columns(2)
+                c1.metric("Soma do Carrinho", formatar_moeda(total_carrinho))
+                c2.metric("Total no Cupom", formatar_moeda(total_cupom), 
+                          delta=formatar_moeda(total_cupom - total_carrinho), 
+                          delta_color="inverse")
+
+                diferenca = abs(total_carrinho - total_cupom)
+                
+                if diferenca < 0.01:
+                    st.success("✅ **Os totais coincidem perfeitamente!**")
+                    st.balloons()
+                else:
+                    st.error(f"⚠️ **Divergência no Valor Total:** Há uma diferença de {formatar_moeda(diferenca)} entre o carrinho e o cupom.")
+                    st.warning("""
+                        **Possíveis causas:**
+                        * Taxas de serviço ou embalagem não computadas.
+                        * Descontos aplicados no fechamento do cupom.
+                        * Erro na leitura de algum item específico pela IA.
+                    """)
+
+                st.divider()
+                
+                st.markdown('<div class="sub-header">📄 Exportar para .pdf</div>', unsafe_allow_html=True)
+                
+                # Prepara o arquivo
+                pdf_bytes = gerar_pdf_direto(
+                    st.session_state.lista_dados, 
+                    total_carrinho, 
+                    total_cupom,
+                    st.session_state.get("img_cupom_b64", "")
+                )
+                
+                st.download_button(
+                    label="📥 Baixar Relatório PDF",
+                    data=pdf_bytes,
+                    file_name=f"relatorio_compra_{datetime.now().strftime('%d%m%Y_%H%M')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+                
                 if st.button("🗑️ Limpar", use_container_width=True):
                     st.session_state.clear()
                     st.rerun()
