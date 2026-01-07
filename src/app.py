@@ -7,15 +7,31 @@ from datetime import datetime
 from streamlit_back_camera_input import back_camera_input
 
 from services.langchain_gemini_service import LangchainGeminiService
-from utils.utils import carregar_css, formatar_moeda, mensagem_erro_df
+from utils.utils import carregar_css, formatar_moeda, mensagem_erro_df, carregar_imagem_base64
 
 def main():
     st.set_page_config(page_title="IA Preço Tá Certo ?", layout="wide")
     carregar_css('assets/styles.css')
     
-    # Header com Clamp e Shimmer
-    st.markdown('<div class="header">IA Preço Tá Certo ?</div>', unsafe_allow_html=True)
-    st.markdown('<div class="titulo-projeto">🛒 Assistente de Compras Inteligente</div>', unsafe_allow_html=True)
+    logo_b64 = carregar_imagem_base64('assets/logo_carrinho.png')
+    
+    if logo_b64:
+        header_html = f"""
+            <div id="logo">
+                <img src="data:image/png;base64,{logo_b64}">
+                <div>
+                    <div class="header" style="margin: 0; line-height: 1.2;">IA Preço Tá Certo ?</div>
+                    <div class="titulo-projeto" style="margin: 0; line-height: 1.2;">🛒 Assistente de Compras Inteligente</div>
+                </div>
+            </div>
+        """
+        st.markdown(header_html, unsafe_allow_html=True)
+    else:
+        # Header com Clamp e Shimmer
+        st.markdown('<div class="header">IA Preço Tá Certo ?</div>', unsafe_allow_html=True)
+        st.markdown('<div class="titulo-projeto">🛒 Assistente de Compras Inteligente</div>', unsafe_allow_html=True)
+    
+    st.divider()
     
     if "toast_msg" in st.session_state and st.session_state.toast_msg:
         st.toast(st.session_state.toast_msg["texto"], icon=st.session_state.toast_msg["icon"])

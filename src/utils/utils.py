@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import base64
 
 def carregar_css(caminho_relativo):
     diretorio_atual = os.path.dirname(os.path.abspath(__file__))     
@@ -18,3 +19,14 @@ def formatar_moeda(valor):
 def mensagem_erro_df(val):
     color = 'red' if val == 'ERRADO' else 'black'
     return f'color: {color}'
+
+def carregar_imagem_base64(caminho_relativo):
+    diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+    caminho_ajustado = caminho_relativo.lstrip('/')
+    caminho_final = os.path.join(diretorio_atual, '..', caminho_ajustado)
+    
+    try:
+        with open(caminho_final, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        return None
