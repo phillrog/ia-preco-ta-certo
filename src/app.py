@@ -35,11 +35,25 @@ def main():
         st.toast(st.session_state.toast_msg["texto"], icon=st.session_state.toast_msg["icon"])
         st.session_state.toast_msg = None 
 
-    with st.sidebar:
+    with st.sidebar:            
         api_key = st.text_input("Gemini API Key", type="password")
-        if st.button("🆕 Nova Compra"):
+        if st.button("🗑️ Limpar", use_container_width=True):
             st.session_state.clear()
             st.rerun()
+        
+        st.divider()
+        
+        disclaimer_html = """
+            <div class="disclaimer">
+                <strong>⚠️ DISCLAIMER (AVISO DE USO)</strong><br><br>
+                ESTA É UMA FERRAMENTA BASEADA EM INTELIGÊNCIA ARTIFICIAL EXPERIMENTAL. 
+                AS ANÁLISES FORNECIDAS SÃO SUGESTÕES EDUCATIVAS. O PROCESSAMENTO DE DADOS 
+                SEGUE RIGOROSOS FILTROS DE PRIVACIDADE LOCAIS, MAS RECOMENDA-SE QUE O USUÁRIO 
+                VALIDE TODAS AS INFORMAÇÕES E CONSULTE AS POLÍTICAS DE PRIVACIDADE DO PROVEDOR (GOOGLE GEMINI).
+            </div>
+        """
+        st.markdown(disclaimer_html, unsafe_allow_html=True)
+        
 
     if not api_key:
         st.info("Informe a chave API na lateral.")
@@ -66,19 +80,19 @@ def main():
     # Área de envio cadastro etiquetas
     with tab1:
         total_atual = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)
-        
+                
         header_tab1 = f"""
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0;">📷 Tire a foto da etiqueta</h3>
-                <div style="text-align: right;">
-                    <span style="font-size: 0.9rem; color: #666;">Total no Carrinho:</span><br>
-                    <strong style="font-size: 1.4rem; color: #008000;">{formatar_moeda(total_atual)}</strong>
+            <div class="valor-total-flex">
+                <div style="text-align: right; min-width: 120px; width: 100%;">
+                    <span class="label-carrinho">💰 Total no Carrinho</span><br>
+                    <strong class="valor-carrinho">{formatar_moeda(total_atual)}</strong>
                 </div>
             </div>
         """
         st.markdown(header_tab1, unsafe_allow_html=True)
         modo = st.radio("Opções de entrada:", ["Câmera de Trás", "Upload manual"], index=1, horizontal=True, key="m_g")
-        img_etiqueta = back_camera_input(key="c_g") if modo == "Câmera" else st.file_uploader("Upload", key="u_g")
+        
+        img_etiqueta = back_camera_input(key="c_g") if modo == "Câmera de Trás" else st.file_uploader("Upload", key="u_g")
         
         if img_etiqueta and ("last_g" not in st.session_state or st.session_state.last_g != img_etiqueta):
             with st.spinner("Lendo etiqueta..."):
@@ -123,11 +137,12 @@ def main():
                     st.session_state.toast_msg = {"texto": f"{nome_in} adicionado a lista!", "icon": "🛒"}
                     st.session_state.form_data = {"produto": "", "preco": 0.0, "unidade": "un", "img_b64": ""}
                     st.rerun()
+                            
                     
     # Área de inspeção da nota
     with tab2:
         if st.session_state.lista_dados:
-            st.markdown('<h1>📋 Itens no Carrinho</h1>', unsafe_allow_html=True)
+            st.markdown('<div class="sub-header">📋 Itens no Carrinho</div>', unsafe_allow_html=True)
             df = pd.DataFrame(st.session_state.lista_dados).sort_values(by="timestamp", ascending=False)
             df.index = range(1, len(df) + 1)
             
@@ -137,9 +152,9 @@ def main():
                                                 
             # --- CONFIGURAÇÃO DE ESTILO E PROPORÇÕES ---
             estilos_colunas = [
-                {'selector': '', 'props': [('width', '100%'), ('table-layout', 'fixed'), ('border-collapse', 'collapse')]},
-                {'selector': 'th', 'props': [('background-color', '#f0f2f6'), ('color', '#31333F'), ('font-weight', 'bold'), ('text-align', 'center'), ('padding', '12px')]},
-                {'selector': 'td', 'props': [('padding', '12px'), ('border-bottom', '1px solid #e6e9ef')]},
+                {'selector': '', 'props': [('width', '100%'), ('border-collapse', 'collapse')]},
+                {'selector': 'th', 'props': [('background-color', '#f0f2f6'), ('color', '#31333F'), ('font-weight', 'bold'), ('text-align', 'center'), ('padding', '12px'), ('font-size', 'clamp(0.8rem, 2.5vw, 1rem)')]},
+                {'selector': 'td', 'props': [('padding', '12px'), ('border-bottom', '1px solid #e6e9ef'), ('font-size', 'clamp(0.75rem, 2.5vw, 0.95rem)')]},
                 
                 # Seletores individuais para garantir largura e alinhamento
                 {'selector': 'th:nth-child(1), td:nth-child(1)', 'props': [('width', '5%'), ('text-align', 'center')]},
@@ -160,13 +175,21 @@ def main():
                 .to_html(escape=False)           
 
             # Exibição
-            st.write(html_tabela, unsafe_allow_html=True)
+            st.write(f'<div class="table-container-mobile">{html_tabela}</div>', unsafe_allow_html=True)
             
-            # Totalizador logo abaixo
-            st.markdown(f'<div style="text-align: right; margin-top: 10px;"><h2>💰 Total Estimado: {formatar_moeda(df["Subtotal Est."].sum())}</h2></div>', unsafe_allow_html=True)
-
+            # Totalizador
+            total_html = f"""              
+                <div class="valor-total-flex">
+                    <div style="text-align: right; min-width: 120px; width: 100%;">
+                        <span class="label-carrinho">💰 Total no Carrinho</span><br>
+                        <strong class="valor-carrinho">{formatar_moeda(df["Subtotal Est."].sum())}</strong>
+                    </div>
+                </div>
+            """
+            st.markdown(total_html, unsafe_allow_html=True)
+            
             ver_idx_ajustado = st.selectbox("Visualizar foto do item:", range(len(df)), format_func=lambda x: f"{df.iloc[x]['Produto']} ({df.iloc[x]['Adicionado em']})")
-            if st.button("👁️ Ver Foto"):
+            if st.button("👁️ Ver Foto", use_container_width=True):
                 item = df.iloc[ver_idx_ajustado]
                 
                 # checa se existe imagem antes de mostrar
@@ -183,7 +206,8 @@ def main():
             st.divider()
             
             # Analise e comparação de Nota Fiscal com etiquetas
-            st.markdown('<h3>🔍 Conferência de preços</h3>', unsafe_allow_html=True)
+            st.markdown('<div class="sub-header">🔍 Conferência de preços</div>', unsafe_allow_html=True)
+            
             modo_c = st.radio("Informe a Nota Fiscal:", ["Câmera de Trás", "Upload manual"], index=1, horizontal=True, key="m_c")
             nota_f = back_camera_input(key="c_c") if modo_c == "Câmera de Trás" else st.file_uploader("Upload manual", key="u_c")
             
@@ -207,12 +231,35 @@ def main():
                     st.rerun()
 
             if "res_comp" in st.session_state:
-                res_df = pd.DataFrame(st.session_state.res_comp)
-                st.dataframe(res_df.style.map(mensagem_erro_df, subset=['Status']), use_container_width=True)
+                res_df = pd.DataFrame(st.session_state.res_comp)                
+                total_ok = len(res_df[res_df['Status'] == 'OK'])
+                total_div = len(res_df[res_df['Status'] != 'OK'])
 
-            if st.button("🗑️ Limpar Tudo"):
-                st.session_state.clear()
-                st.rerun()
+                header_resultado = f"""
+                    <div id="resultado">
+                        <div class="sub-header" style="margin:0;">🖳 Resultado</div>
+                        <div style="display: flex; gap: 15px;">
+                            <span style="color: #28a745; font-weight: 900; font-size: clamp(1rem, 4vw, 1.2rem);">
+                                OK: {total_ok}
+                            </span>
+                            <span style="color: #dc3545; font-weight: 900; font-size: clamp(1rem, 4vw, 1.2rem);">
+                                Divergência: {total_div}
+                            </span>
+                        </div>
+                    </div>
+                """
+                st.markdown(header_resultado, unsafe_allow_html=True)
+
+                st.dataframe(
+                    res_df.style.map(mensagem_erro_df, subset=['Status']), 
+                    use_container_width=True,
+                    hide_index=True 
+                )
+
+                # Só vai aparecer após analisar
+                if st.button("🗑️ Limpar", use_container_width=True):
+                    st.session_state.clear()
+                    st.rerun()
         else:
             st.info("Carrinho vazio.")
 

@@ -53,3 +53,123 @@ iframe[title="streamlit_back_camera_input.back_camera_input"] {
 [data-testid="stMarkdownContainer"] table {
     width: 100% !important;
 }
+
+/* resultado */
+#resultado {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-top: 30px; 
+    margin-bottom: 15px; 
+    padding: 10px; 
+    background-color: #bbdde7; 
+    border-radius: 8px;
+}
+
+input[type="text"] {
+    text-transform: uppercase !important;
+}
+
+table, div[data-testid="stDataFrame"] {
+    text-transform: uppercase !important;
+}
+
+::placeholder {
+    text-transform: none !important;
+}
+
+/* Títulos de Seção (Substitui H1 e H3) */
+.sub-header {
+    font-family: 'Inter', sans-serif;
+    color: #1e3a8a;
+    font-size: clamp(0.1rem, 5vw, 1.5rem);
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+}
+
+.valor-total-flex {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+    background-color: #e2eaf9;
+    padding: 15px;
+    border-radius: 8px;
+    line-height: 1.4;
+    border: 1px solid #e0e0e0;
+}
+
+/* Label menor para o "Total no Carrinho" */
+.label-carrinho {
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    color: #666;
+    font-weight: 600;
+}
+
+/* Valor do carrinho na Tab 1 */
+.valor-carrinho {
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    color: #008000;
+    font-weight: 900;
+}
+
+/* Texto do Totalizador */
+.total-label {
+    font-size: clamp(1rem, 4vw, 1.3rem);
+    color: #666;
+}
+
+.total-valor {
+    font-size: clamp(1.4rem, 6vw, 2.2rem);
+    color: #008000;
+    font-weight: 900;
+}
+
+/* Container de Resultado Responsivo */
+#resultado {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 5px solid #1e3a8a;
+}
+
+@media (min-width: 768px) {
+    #resultado {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+
+.disclaimer {
+    font-size: clamp(0.7rem, 3vw, 0.85rem);
+    color: #666;
+    background-color: #cbe2ed;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 40px;
+    text-align: justify;
+    line-height: 1.4;
+    border: 1px solid #e0e0e0;
+}
+
+
+/* Container para permitir scroll horizontal em tabelas */
+.table-container-mobile {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+/* Garante que a tabela tenha uma largura mínima no mobile para não espremer */
+.table-container-mobile table {
+    min-width: 1200px;
+}
