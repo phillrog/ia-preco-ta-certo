@@ -68,7 +68,7 @@ def main():
     if "zoom_image" not in st.session_state: st.session_state.zoom_image = None
 
     if st.session_state.zoom_image:
-        st.subheader(f"🖼️ Foto: {st.session_state.zoom_image['nome']}")
+        st.markdown(f'<div class="sub-header">🖼️ {st.session_state.zoom_image['nome']}</div>', unsafe_allow_html=True)
         st.image(base64.b64decode(st.session_state.zoom_image['b64']), use_container_width=True)
         if st.button("⬅️ Voltar"):
             st.session_state.zoom_image = None
@@ -136,63 +136,66 @@ def main():
                     })
                     st.session_state.toast_msg = {"texto": f"{nome_in} adicionado a lista!", "icon": "🛒"}
                     st.session_state.form_data = {"produto": "", "preco": 0.0, "unidade": "un", "img_b64": ""}
-                    st.rerun()
-                            
-                    
+                    st.rerun()                                                     
+
     # Área de inspeção da nota
     with tab2:
         if st.session_state.lista_dados:
             st.markdown('<div class="sub-header">📋 Itens no Carrinho</div>', unsafe_allow_html=True)
-            df = pd.DataFrame(st.session_state.lista_dados).sort_values(by="timestamp", ascending=False)
-            df.index = range(1, len(df) + 1)
             
-            df_display = df.drop(columns=['_img_b64', 'timestamp']).copy()
-            df_display["Preço Prateleira"] = df_display["Preço Prateleira"].apply(formatar_moeda)
-            df_display["Subtotal Est."] = df_display["Subtotal Est."].apply(formatar_moeda)
-                                                
-            # --- CONFIGURAÇÃO DE ESTILO E PROPORÇÕES ---
-            estilos_colunas = [
-                {'selector': '', 'props': [('width', '100%'), ('border-collapse', 'collapse')]},
-                {'selector': 'th', 'props': [('background-color', '#f0f2f6'), ('color', '#31333F'), ('font-weight', 'bold'), ('text-align', 'center'), ('padding', '12px'), ('font-size', 'clamp(0.8rem, 2.5vw, 1rem)')]},
-                {'selector': 'td', 'props': [('padding', '12px'), ('border-bottom', '1px solid #e6e9ef'), ('font-size', 'clamp(0.75rem, 2.5vw, 0.95rem)')]},
-                
-                # Seletores individuais para garantir largura e alinhamento
-                {'selector': 'th:nth-child(1), td:nth-child(1)', 'props': [('width', '5%'), ('text-align', 'center')]},
-                {'selector': 'th:nth-child(2), td:nth-child(2)', 'props': [('width', '5%'), ('display', 'none')]},
-                {'selector': 'th:nth-child(3), td:nth-child(3)', 'props': [('width', '15%'), ('text-align', 'center')]},
-                {'selector': 'th:nth-child(4), td:nth-child(4)', 'props': [('width', '35%'), ('text-align', 'left')]},
-                {'selector': 'th:nth-child(5), td:nth-child(5)', 'props': [('width', '12%'), ('text-align', 'right')]},
-                {'selector': 'th:nth-child(6), td:nth-child(6)', 'props': [('width', '8%'), ('text-align', 'right')]},
-                {'selector': 'th:nth-child(7), td:nth-child(7)', 'props': [('width', '8%'), ('text-align', 'center')]},
-                {'selector': 'th:nth-child(8), td:nth-child(8)', 'props': [('width', '17%'), ('text-align', 'right')]}
-            ]
-
-            # Gerar o HTML com a formatação
-            html_tabela = df_display.style.set_table_styles(estilos_colunas)\
-                .format({
-                    "Qtd": "{:,.3f}".format
-                }, decimal=',', thousands='.')\
-                .to_html(escape=False)           
-
-            # Exibição
-            st.write(f'<div class="table-container-mobile">{html_tabela}</div>', unsafe_allow_html=True)
+            df_base = pd.DataFrame(st.session_state.lista_dados).sort_values(by="timestamp", ascending=False)
+            df_base.insert(0, "#", range(1, len(df_base) + 1))
             
-            # Totalizador
+            df_exibicao = df_base.drop(columns=['_img_b64', 'timestamp']).copy()
+            df_exibicao["Remover"] = False
+
+            df_editado = st.data_editor(
+                df_exibicao,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "id": None,
+                    "#": st.column_config.NumberColumn("Item", width="small"),
+                    "Produto": st.column_config.TextColumn("Produto", width="large"),
+                    "Preço Prateleira": st.column_config.NumberColumn("Preço", format="R$ %.2f"),
+                    "Subtotal Est.": st.column_config.NumberColumn("Subtotal", format="R$ %.2f"),
+                    "Qtd": st.column_config.NumberColumn("Qtd", format="%.3f"),
+                    "Remover": st.column_config.CheckboxColumn("Excluir?", default=False),
+                },
+                disabled=["#", "Produto", "Preço Prateleira", "Qtd", "Unidade", "Subtotal Est.", "Adicionado em"],
+                key="tabela_carrinho"
+            )
+
+            itens_para_excluir = df_editado[df_editado["Remover"] == True]
+            
+            if not itens_para_excluir.empty:
+                if st.button(f"🗑️ Confirmar Remoção ({len(itens_para_excluir)})", use_container_width=True, type="primary"):
+                    ids_remover = itens_para_excluir["id"].tolist()
+                    st.session_state.lista_dados = [item for item in st.session_state.lista_dados if item["id"] not in ids_remover]
+                    st.session_state.toast_msg = {"texto": "Item removido!", "icon": "🛒"}
+                    st.rerun()
+
+            total_valor = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)
             total_html = f"""              
                 <div class="valor-total-flex">
                     <div style="text-align: right; min-width: 120px; width: 100%;">
                         <span class="label-carrinho">💰 Total no Carrinho</span><br>
-                        <strong class="valor-carrinho">{formatar_moeda(df["Subtotal Est."].sum())}</strong>
+                        <strong class="valor-carrinho">{formatar_moeda(total_valor)}</strong>
                     </div>
                 </div>
             """
             st.markdown(total_html, unsafe_allow_html=True)
             
-            ver_idx_ajustado = st.selectbox("Visualizar foto do item:", range(len(df)), format_func=lambda x: f"{df.iloc[x]['Produto']} ({df.iloc[x]['Adicionado em']})")
+            df_atualizado = pd.DataFrame(st.session_state.lista_dados).sort_values(by="timestamp", ascending=False)
+            
+            ver_idx_ajustado = st.selectbox(
+                "Visualizar foto do item:", 
+                range(len(df_atualizado)), 
+                format_func=lambda x: f"{df_atualizado.iloc[x]['Produto']} ({df_atualizado.iloc[x]['Adicionado em']})"
+            )
+            
             if st.button("👁️ Ver Foto", use_container_width=True):
-                item = df.iloc[ver_idx_ajustado]
-                
-                # checa se existe imagem antes de mostrar
+                item = df_atualizado.iloc[ver_idx_ajustado]
                 if "_img_b64" in item and item["_img_b64"]:
                     st.session_state.zoom_image = {
                         "b64": item["_img_b64"], 
@@ -201,7 +204,7 @@ def main():
                     }
                     st.rerun()
                 else:
-                    st.warning(f"O item '{item['Produto']}' foi adicionado manualmente e não possui imagem.")
+                    st.warning(f"O item '{item['Produto']}' não possui imagem.")
             
             st.divider()
             
@@ -213,7 +216,9 @@ def main():
             
             if nota_f and ("last_c" not in st.session_state or st.session_state.last_c != nota_f):
                 with st.spinner("Comparando..."):
-                    xml = langchain_gemini_service.comparar_nota_etiquetas(df, Image.open(nota_f))
+                    df_para_comparar = pd.DataFrame(st.session_state.lista_dados)
+                    
+                    xml = langchain_gemini_service.comparar_nota_etiquetas(df_para_comparar, Image.open(nota_f))
                     items = re.findall(r'<item>(.*?)</item>', xml, re.S)
                     res_c = []
                     for it in items:
@@ -234,27 +239,39 @@ def main():
                 res_df = pd.DataFrame(st.session_state.res_comp)                
                 total_ok = len(res_df[res_df['Status'] == 'OK'])
                 total_div = len(res_df[res_df['Status'] != 'OK'])
+                
+                def colorir_status(val):
+                    if val == 'OK':
+                        return 'background-color: #d4edda; color: #155724; font-weight: bold;'
+                    else:
+                        return 'background-color: #f8d7da; color: #721c24; font-weight: bold;'
 
                 header_resultado = f"""
                     <div id="resultado">
                         <div class="sub-header" style="margin:0;">🖳 Resultado</div>
                         <div style="display: flex; gap: 15px;">
                             <span style="color: #28a745; font-weight: 900; font-size: clamp(1rem, 4vw, 1.2rem);">
-                                OK: {total_ok}
+                               ✅ OK: {total_ok}
                             </span>
                             <span style="color: #dc3545; font-weight: 900; font-size: clamp(1rem, 4vw, 1.2rem);">
-                                Divergência: {total_div}
+                               ❌ Divergência: {total_div}
                             </span>
                         </div>
                     </div>
                 """
                 st.markdown(header_resultado, unsafe_allow_html=True)
 
+                df_estilizado = res_df.style.map(colorir_status, subset=['Status'])
+                
                 st.dataframe(
-                    res_df.style.map(mensagem_erro_df, subset=['Status']), 
+                    df_estilizado,
                     use_container_width=True,
                     hide_index=True 
                 )
+                
+                if total_div == 0 and total_ok > 0:
+                    st.balloons()
+                    st.success("🎉 Tudo certinho! Nenhum erro encontrado.")
 
                 # Só vai aparecer após analisar
                 if st.button("🗑️ Limpar", use_container_width=True):

@@ -173,3 +173,14 @@ table, div[data-testid="stDataFrame"] {
 .table-container-mobile table {
     min-width: 1200px;
 }
+
+.btn-excluir {
+    color: #dc3545;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+}
+.btn-excluir:hover {
+    color: #a71d2a;
+}
