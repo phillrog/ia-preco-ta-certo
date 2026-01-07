@@ -38,29 +38,42 @@ class LangchainGeminiService:
         
         # XML Tagging
         prompt = f"""
-        Você é um auditor de preços rigoroso. Sua tarefa é realizar o cruzamento de dados entre os itens da prateleira e o cupom fiscal.
+        Você é um AUDITOR DE PREÇOS RIGOROSO. Sua missão é cruzar os dados da prateleira com o cupom fiscal.
 
         <contexto_lista_prateleira>
         {lista_itens}
         </contexto_lista_prateleira>
 
         <instrucoes_auditoria>
+        ### PRIORIDADE DE ANÁLISE
         1. ANALISE UNITÁRIA: Processe cada item dentro de <contexto_lista_prateleira> individualmente.
         2. CONFERÊNCIA DE REPETIDOS: Se houver produtos idênticos, valide cada ocorrência separadamente contra o cupom fiscal.
-        3. PREÇO EXATO: Compare centavo por centavo. Qualquer divergência gera Status 'ERRO DE PREÇO'.
-        4. FORMATAÇÃO DE MOEDA: Use o padrão brasileiro (R$ 0,00) com vírgula para centavos nas descrições.
-        5. PADRÃO DE OBSERVAÇÃO: A tag <d> deve seguir rigorosamente este modelo:
-        - Se estiver correto: "PRATELEIRA R$ X,XX | CUPOM R$ X,XX - Não houve divergência"
-        - Se houver erro: "PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - Divergência de R$ Z,ZZ"
-        - Se não encontrar: "Produto não localizado no cupom fiscal"
+        
+        ### REGRAS DE PREÇO E OFERTA
+        3. PREÇO DE VAREJO FINAL: Extraia o preço unitário para o consumidor comum.
+        4. FOCO NA OFERTA GERAL: Se houver um preço 'DE/POR', pegue o 'POR' (valor promocional vigente para todos).
+        5. IGNORAR FIDELIDADE E CLUBES: Ignore preços que exijam condições especiais, como 'PREÇO EXCLUSIVO CARTÃO DA LOJA', 'SÓ PARA CLIENTE MAIS' ou 'CLUBE DE FIDELIDADE'. Pegue sempre o preço de prateleira para o público geral.
+        6. IGNORAR ATACADO: Ignore preços do tipo 'Leve 3 Pague 2' ou 'A partir de X unidades'.
+        
+        ### CRITÉRIOS DE STATUS
+        7. PREÇO EXATO: Compare centavo por centavo. Qualquer divergência gera Status 'ERRO DE PREÇO'.
+        8. PREÇO EXATO: Compare centavo por centavo com o cupom fiscal. Diferenças geram Status 'ERRO DE PREÇO'.
+
+        ### FORMATAÇÃO DA RESPOSTA
+        9. FORMATAÇÃO DE MOEDA: Use o padrão brasileiro (R$ 0,00) com vírgula para centavos nas descrições.
+        10. PADRÃO DE TEXTO: Retorne nomes e observações em letras MAIÚSCULAS (UPPERCASE).
+        11. PADRÃO DE OBSERVAÇÃO: A tag <d> deve seguir rigorosamente este modelo:
+           - Se estiver correto: "PRATELEIRA R$ X,XX | CUPOM R$ X,XX - NÃO HOUVE DIVERGÊNCIA"
+           - Se houver erro: "PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - DIVERGÊNCIA DE R$ Z,ZZ"
+           - Se não encontrar: "PRODUTO NÃO LOCALIZADO NO CUPOM FISCAL"
         </instrucoes_auditoria>
 
         <formato_saida_esperado>
-        Retorne APENAS tags XML:
+        Retorne APENAS tags XML para cada item analisado:
         <item>
-            <n>Nome do Produto</n>
-            <s>Status (OK, ERRO DE PREÇO, NÃO ENCONTRADO)</s>
-            <d>PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - [Mensagem]</d>
+            <n>NOME DO PRODUTO</n>
+            <s>STATUS (OK, ERRO DE PREÇO, NÃO ENCONTRADO)</s>
+            <d>PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - [MENSAGEM]</d>
         </item>
         </formato_saida_esperado>
         """
