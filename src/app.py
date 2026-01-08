@@ -98,7 +98,7 @@ def main():
 
     tab1, tab2 = st.tabs(["📸 Adicionar Produto", "📋 Analisar compra"])
 
-    # Área de envio cadastro etiquetas
+    # Área de conferência de item
     with tab1:
         total_atual = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)
                 
@@ -254,7 +254,7 @@ def main():
                         df_para_comparar = pd.DataFrame(st.session_state.lista_dados)
                         
                         xml = langchain_gemini_service.comparar_nota_etiquetas(df_para_comparar, Image.open(nota_f))
-                        adicionar_log(f"RESPOSTA ANÁLISE (XML): {xml}...", "ai_out")
+                        adicionar_log(f"RESPOSTA ANÁLISE (XML): {xml}", "ai_out")
                         
                         match_total = re.search(r'<total_nota>(.*?)</total_nota>', xml, re.S)
                         if match_total:

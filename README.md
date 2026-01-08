@@ -17,6 +17,8 @@ Ao final, o usuário fotografa o cupom fiscal. A IA compara os preços registrad
 -   🔍 **Conferência Automatizada:** Comparação inteligente entre os preços das etiquetas e o cupom fiscal emitido.
 -   🖼️ **Histórico Visual:** Armazenamento temporário das fotos das etiquetas para conferência manual, se necessário.
 -   📱 **Interface Responsiva:** Tabela de itens otimizada para visualização em dispositivos móveis.
+-   🗎  **Registro de Atividade (Logs & Tráfego de IA):** Captura e exibição dos logs de execução.
+-   💾 **Exportação de Relatório PDF:** Exporte para o formato .pdf toda a compra efetuada no assistente.
 
 ## 📊 Estrutura do Projeto
 -----------------------
@@ -41,6 +43,14 @@ Plaintext
 -   **Processamento de Dados:** Pandas
 -   **Estilização:** CSS
 
+## 📚 Bibliotecas Utilizadas
+
+-   **[Streamlit](https://streamlit.io/):** Framework principal para a criação da interface web reativa.
+-   **[LangChain Google GenAI](https://python.langchain.com/docs/integrations/chat/google_generative_ai/):** Orquestração das chamadas ao modelo **Gemini 3 Flash**, permitindo o processamento multimodal (texto + imagem).
+-   **[Pandas](https://pandas.pydata.org/):** Estruturação e manipulação da lista de compras em DataFrames para cálculos precisos.
+-   **[Pillow (PIL)](https://www.google.com/search?q=https://python-pillow.org/):** Processamento e conversão de imagens capturadas pela câmera ou upload.
+-   **[Streamlit Back Camera Input](https://www.google.com/search?q=https://github.com/m-v-p-a/streamlit-back-camera-input):** Componente especializado para acesso direto à câmera traseira em dispositivos móveis.
+-   **[FPDF2](https://py-pdf.github.io/fpdf2/):** Geração dinâmica de relatórios em PDF para exportação dos resultados da auditoria.
 
 ## 🚀 Como rodar o projeto
 
@@ -96,22 +106,68 @@ A aplicação utiliza o modelo **Gemini 3 Flash (Preview)**. Para obter sua chav
 Obs: Cuidado com os limites
 
 
-# Prompts
+# Exemplo dos prompts executados
 Análise da etiqueta
 ``` Analise esta etiqueta de preço. Retorne APENAS: 
-    <p>Nome do Produto + Peso/Unidade</p> <v>Preço</v> <u>Unidade (kg, un, g)</u>. 
+    <p>Nome do Produto + Peso/Unidade</p> 
+    <v>Preço</v> 
+    <u>Unidade (kg, un, g)</u>. 
     Se não encontrar, retorne <p>N/A</p>
-```            
+```   
 
-Comparação com cupom fiscal
+Obs: O retorno virá uma resposta com tags como um XML contendo os dados encontrados.
+
+Comparação com a nota fiscal
 ```
-Minha lista da prateleira (VALORES CORRETOS): {lista_texto}
-            Analise da NOTA FISCAL anexo e compare com a minha lista. REGRAS:
-            1. Compare o valor unitário (ou por kg) de cada item.
-            2. Se o valor na NOTA FISCAL for MAIOR que o valor na PRATELEIRA, Status = 'ERRADO'.
-            3. Se o valor no NOTA FISCAL for IGUAL ou MENOR que na PRATELEIRA, Status = 'OK'.
-            4. Na Observação, coloque SEMPRE: 'PRATELEIRA: R$ X | NOTA FISCAL: R$ Y'.
-            Retorne APENAS tags: <item><n>Nome</n><s>Status</s><d>Observação</d></item>
+Você é um AUDITOR DE PREÇOS RIGOROSO. Sua missão é cruzar os dados da prateleira com o cupom fiscal.
+
+    <contexto_lista_prateleira>
+    [{'id': 1767832259.035672, 'Produto': 'APONTADOR DUPLO HC', 'Preço Prateleira': 14.99, 'Qtd': 1.0, 'Unidade': 'un'}]
+    </contexto_lista_prateleira>
+
+    <instrucoes_auditoria>
+    ### PRIORIDADE DE ANÁLISE
+    1. ANALISE UNITÁRIA: Processe cada item dentro de <contexto_lista_prateleira> individualmente.
+    2. CONFERÊNCIA DE REPETIDOS: Se houver produtos idênticos, valide cada ocorrência separadamente contra o cupom fiscal.
+
+    ### REGRAS DE PREÇO E OFERTA
+    3. PREÇO DE VAREJO FINAL: Extraia o preço unitário para o consumidor comum.
+    4. FOCO NA OFERTA GERAL: Se houver um preço 'DE/POR', pegue o 'POR' (valor promocional vigente para todos).
+    5. IGNORAR FIDELIDADE E CLUBES: Ignore preços que exijam condições especiais, como 'PREÇO EXCLUSIVO CARTÃO DA LOJA', 'SÓ PARA CLIENTE MAIS' ou 'CLUBE DE FIDELIDADE'. Pegue sempre o preço de prateleira para o público geral.
+    6. IGNORAR ATACADO: Ignore preços do tipo 'Leve 3 Pague 2' ou 'A partir de X unidades'.
+
+    ### CRITÉRIOS DE STATUS
+    7. PREÇO EXATO: Compare centavo por centavo. Qualquer divergência gera Status 'ERRO DE PREÇO'.
+    8. PREÇO EXATO: Compare centavo por centavo com o cupom fiscal. Diferenças geram Status 'ERRO DE PREÇO'.
+
+    ### FORMATAÇÃO DA RESPOSTA
+    9. FORMATAÇÃO DE MOEDA: Use o padrão brasileiro (R$ 0,00) com vírgula para centavos nas descrições.
+    10. PADRÃO DE TEXTO: Retorne nomes e observações em letras MAIÚSCULAS (UPPERCASE).
+    11. PADRÃO DE OBSERVAÇÃO: A tag <d> deve seguir rigorosamente este modelo:
+       - Se estiver correto: "PRATELEIRA R$ X,XX | CUPOM R$ X,XX - NÃO HOUVE DIVERGÊNCIA"
+       - Se houver erro: "PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - DIVERGÊNCIA DE R$ Z,ZZ"
+       - Se não encontrar: "PRODUTO NÃO LOCALIZADO NO CUPOM FISCAL"
+    </instrucoes_auditoria>
+
+    <formato_saida_esperado>
+    Retorne a resposta estritamente no formato XML abaixo. 
+    Não adicione texto antes ou depois do XML:
+
+    <resultado>
+        <itens>
+            <item>
+                <n>NOME DO PRODUTO</n>
+                <s>STATUS (Use apenas: OK, ERRO DE PREÇO ou NÃO ENCONTRADO)</s>
+                <d>PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - [MENSAGEM]</d>
+            </item>
+        </itens>
+        <total_nota>VALOR_TOTAL_PAGO_NO_CUPOM</total_nota>
+    </resultado>
+    </formato_saida_esperado>
 ```
+
+Obs: O retorno virá uma resposta com tags como um XML contendo os dados encontrados.
+
+---
 
 # Resultado

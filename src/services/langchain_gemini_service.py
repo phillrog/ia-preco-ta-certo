@@ -101,7 +101,7 @@ class LangchainGeminiService:
         </formato_saida_esperado>
         """
 
-        self._enviar_log(f"PROMPT AUDITORIA ENVIADO (Contexto + Instruções)", "ai_in")
+        self._enviar_log(f"PROMPT AUDITORIA ENVIADO (Contexto + Instruções): {prompt}", "ai_in")
 
         message = HumanMessage(content=[
             {"type": "text", "text": prompt},
