@@ -1,0 +1,37 @@
+name: Build IA Preço Tá Certo ?
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  verificacao:
+    name: Testar Ambiente e Dependências
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Código Fonte 📥
+      uses: actions/checkout@v4
+
+    - name: Configurar Python 3.10 🐍
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Instalar Dependências do Sistema (Cairo) 🖼️
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libcairo2-dev pkg-config
+
+    - name: Instalar Bibliotecas do Python 📦
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r src/requirements.txt
+
+    - name: Verificação de Sintaxe (Lint) 🔍
+      run: |
+        pip install flake8
+        # Para o build se houver erros de Python ou nomes não definidos
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
