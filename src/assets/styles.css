@@ -1,5 +1,7 @@
-/* Efeito Shimmer para o Header */
-@keyframes shimmer {
+/* ==========================================================================
+    ANIMAÇÕES E CABEÇALHO (HEADER & LOGO)
+   ========================================================================== */
+   @keyframes shimmer {
     0% { background-position: -200% center; }
     100% { background-position: 200% center; }
 }
@@ -26,9 +28,10 @@
     justify-content: center;
 }
 
-#logo img{
+#logo img {
     width: clamp(4rem, 7vw, 9rem) !important;
-    height: auto; border-radius: 10px;
+    height: auto; 
+    border-radius: 10px;
 }
 
 .titulo-projeto {
@@ -40,45 +43,9 @@
     opacity: 0.8;
 }
 
-/* Ajustes de Câmera e UI */
-div[data-testid="stCameraInput"] { width: 100% !important; }
-iframe[title="streamlit_back_camera_input.back_camera_input"] {
-    width: 100% !important; aspect-ratio: 4 / 3; 
-    height: auto !important; min-height: calc(48vh - 100px) !important; 
-    object-fit: contain !important; border-radius: 20px; background: #000; 
-}
-.stButton button { width: 100%; height: 3.5em; font-weight: bold; }
-
-/* Tabela de itens */
-[data-testid="stMarkdownContainer"] table {
-    width: 100% !important;
-}
-
-/* resultado */
-#resultado {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-top: 30px; 
-    margin-bottom: 15px; 
-    padding: 10px; 
-    background-color: #bbdde7; 
-    border-radius: 8px;
-}
-
-input[type="text"] {
-    text-transform: uppercase !important;
-}
-
-table, div[data-testid="stDataFrame"] {
-    text-transform: uppercase !important;
-}
-
-::placeholder {
-    text-transform: none !important;
-}
-
-/* Títulos de Seção (Substitui H1 e H3) */
+/* ==========================================================================
+    TITULOS E ELEMENTOS DAS TABELAS
+   ========================================================================== */
 .sub-header {
     font-family: 'Inter', sans-serif;
     color: #1e3a8a;
@@ -88,6 +55,43 @@ table, div[data-testid="stDataFrame"] {
     letter-spacing: -0.02em;
 }
 
+/* Força Uppercase em Inputs e Tabelas */
+input[type="text"], 
+table, 
+div[data-testid="stDataFrame"] {
+    text-transform: uppercase !important;
+}
+
+::placeholder {
+    text-transform: none !important;
+}
+
+/* ==========================================================================
+    INTERFACE DE ENTRADA (CÂMERA E BOTÕES)
+   ========================================================================== */
+div[data-testid="stCameraInput"] { 
+    width: 100% !important; 
+}
+
+iframe[title="streamlit_back_camera_input.back_camera_input"] {
+    width: 100% !important; 
+    aspect-ratio: 4 / 3; 
+    height: auto !important; 
+    min-height: calc(48vh - 100px) !important; 
+    object-fit: contain !important; 
+    border-radius: 20px; 
+    background: #000; 
+}
+
+.stButton button { 
+    width: 100%; 
+    height: 3.5em; 
+    font-weight: bold; 
+}
+
+/* ==========================================================================
+    CARRINHO E TOTALIZADORES
+   ========================================================================== */
 .valor-total-flex {
     display: flex; 
     justify-content: space-between; 
@@ -102,21 +106,18 @@ table, div[data-testid="stDataFrame"] {
     border: 1px solid #e0e0e0;
 }
 
-/* Label menor para o "Total no Carrinho" */
 .label-carrinho {
     font-size: clamp(1.3rem, 3vw, 2rem);
     color: #666;
     font-weight: 600;
 }
 
-/* Valor do carrinho na Tab 1 */
 .valor-carrinho {
     font-size: clamp(1.3rem, 3vw, 2rem);
     color: #008000;
     font-weight: 900;
 }
 
-/* Texto do Totalizador */
 .total-label {
     font-size: clamp(1rem, 4vw, 1.3rem);
     color: #666;
@@ -128,15 +129,19 @@ table, div[data-testid="stDataFrame"] {
     font-weight: 900;
 }
 
-/* Container de Resultado Responsivo */
+/* ==========================================================================
+    ANÁLISE E COMPARAÇÂO NOTA FISCAL COM ETIQUETAS E RESUMO DOS RESULTADOS
+   ========================================================================== */
 #resultado {
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 15px;
-    background-color: #f8f9fa;
+    background-color: #f8f9fa; 
     border-radius: 8px;
     border-left: 5px solid #1e3a8a;
+    margin-top: 30px; 
+    margin-bottom: 15px; 
 }
 
 @media (min-width: 768px) {
@@ -147,21 +152,13 @@ table, div[data-testid="stDataFrame"] {
     }
 }
 
-
-.disclaimer {
-    font-size: clamp(0.7rem, 3vw, 0.85rem);
-    color: #666;
-    background-color: #cbe2ed;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 40px;
-    text-align: justify;
-    line-height: 1.4;
-    border: 1px solid #e0e0e0;
+/* ==========================================================================
+    TABELAS E DISCLAIMER
+   ========================================================================== */
+[data-testid="stMarkdownContainer"] table {
+    width: 100% !important;
 }
 
-
-/* Container para permitir scroll horizontal em tabelas */
 .table-container-mobile {
     width: 100%;
     overflow-x: auto;
@@ -169,7 +166,6 @@ table, div[data-testid="stDataFrame"] {
     margin-bottom: 1rem;
 }
 
-/* Garante que a tabela tenha uma largura mínima no mobile para não espremer */
 .table-container-mobile table {
     min-width: 1200px;
 }
@@ -181,6 +177,19 @@ table, div[data-testid="stDataFrame"] {
     font-size: 1.2rem;
     padding: 5px 10px;
 }
+
 .btn-excluir:hover {
     color: #a71d2a;
+}
+
+.disclaimer {
+    font-size: clamp(0.7rem, 3vw, 0.85rem);
+    color: #666;
+    background-color: #cbe2ed;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 40px;
+    text-align: justify;
+    line-height: 1.4;
+    border: 1px solid #e0e0e0;
 }

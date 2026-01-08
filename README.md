@@ -26,13 +26,22 @@ Ao final, o usuário fotografa o cupom fiscal. A IA compara os preços registrad
 Plaintext
 
 ```
+src/
 ├── assets/
-│   └── styles.css          # Estilização visual (Clamp e Shimmer)
+│   ├── logo_carrinho.png       # logo
+│   └── styles.css              # CSS (Shimmer, UI Responsiva)
+├── components/
+│   ├── sidebar.py              # Configurações, Disclaimer e Logs
+│   ├── tab_adicionar.py        # Extrai dados das etiqueta ou preenche os dados
+│   └── tab_analisar.py         # Vizualiza os itens e analisa a compra
+├── controllers/
+│   └── processador_ia.py       # Lógica de extração de dados (Regex e parsing de XML)
 ├── services/
-│   └── gemini_service.py   # Integração com a API do Gemini
+│   └── langchain_gemini_service.py # Comunicação com a API Gemini e processamento de imagem
 ├── utils/
-│   └── utils.py            # Funções de formatação e ajuda
-└── app.py                  # Arquivo principal do Streamlit
+│   └── utils.py                # Utilitários (formatador de moeda, Base64 e gerador de PDF)
+├── requirements.txt            # Lista de dependências (Streamlit, LangChain, FPDF, etc.)
+└── app.py                      # Orquestrador principal e gerenciamento de estado (Session State)
 ```
 
 ## 🛠️ Tecnologias Utilizadas

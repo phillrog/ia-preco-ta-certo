@@ -39,9 +39,20 @@ def gerar_pdf_direto(lista_dados, total_carrinho, total_cupom, img_cupom_b64):
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
+    # Logo
+    diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+    caminho_logo = os.path.join(diretorio_atual, '..', 'assets', 'logo_principal.png')
+    
+    if os.path.exists(caminho_logo):
+        largura_logo = 100  
+        x_centralizado = (210 - largura_logo) / 2 
+        pdf.image(caminho_logo, x=x_centralizado, y=5, w=largura_logo)
+        pdf.ln(30)
+    else:
+        pdf.ln(10)
+    
     # Cabeçalho
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(190, 14, "IA IA Preço Tá Certo ?", ln=True, align="C")
     pdf.cell(190, 10, "Relatório de Compra", ln=True, align="C")
     pdf.set_font("Arial", "", 10)
     pdf.cell(190, 10, f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}", ln=True, align="C")
