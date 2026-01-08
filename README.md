@@ -1,3 +1,5 @@
+# [![Build IA Preço Tá Certo ?](https://github.com/phillrog/ia-preco-ta-certo/actions/workflows/build-com-conda.yml/badge.svg)](https://github.com/phillrog/ia-preco-ta-certo/actions/workflows/build-com-conda.yml) - [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ia-preco-ta-certo.streamlit.app)
+
 <img width="644" height="194" alt="Captura de tela 2026-01-07 160850" src="https://github.com/user-attachments/assets/e96a763d-276e-4cd4-b282-62a893511624" />
 
 
