@@ -108,7 +108,8 @@ Obs: Cuidado com os limites
 
 # Exemplo dos prompts executados
 Análise da etiqueta
-``` Analise esta etiqueta de preço. Retorne APENAS: 
+``` 
+    Analise esta etiqueta de preço. Retorne APENAS: 
     <p>Nome do Produto + Peso/Unidade</p> 
     <v>Preço</v> 
     <u>Unidade (kg, un, g)</u>. 
