@@ -193,3 +193,12 @@ iframe[title="streamlit_back_camera_input.back_camera_input"] {
     line-height: 1.4;
     border: 1px solid #e0e0e0;
 }
+
+/* ==========================================================================
+    CUSTOMIZAÇÃO DAS TABS (ABAS)
+   ========================================================================== */
+button > [data-testid="stMarkdownContainer"] p {
+    font-size: clamp(1rem, 4vw, 1.4rem) !important;
+    font-weight: 700 !important;
+    color: #e0525c;
+}
