@@ -6,8 +6,14 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 
 class LangchainGeminiService:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, log_callback=None):
         self.llm = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", google_api_key=api_key)
+        self.log_callback = log_callback
+
+    def _enviar_log(self, mensagem, tipo="info"):
+        """Método interno para disparar o callback de log se ele existir"""
+        if self.log_callback:
+            self.log_callback(mensagem, tipo)
 
     def _converter_img_base64(self, image: Image):
         if image.mode in ("RGBA", "P"):
@@ -23,12 +29,22 @@ class LangchainGeminiService:
             "<p>Nome do Produto + Peso/Unidade</p> <v>Preço</v> <u>Unidade (kg, un, g)</u>. "
             "Se não encontrar, retorne <p>N/A</p>"
         )
+        
+        # Enviando Prompt
+        self._enviar_log(f"PROMPT ETIQUETA: {prompt}", "ai_in")
+
         message = HumanMessage(content=[
             {"type": "text", "text": prompt},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}}
         ])
+        
         response = self.llm.invoke([message])
-        return str(response.content), img_base64
+        resposta_texto = str(response.content)
+
+        # Recebendo Resposta
+        self._enviar_log(f"RESPOSTA ETIQUETA: {resposta_texto}", "ai_out")
+        
+        return resposta_texto, img_base64
 
     def comparar_nota_etiquetas(self, df_carrinho, imagem_nota: Image):
         img_base64 = self._converter_img_base64(imagem_nota)
@@ -85,10 +101,16 @@ class LangchainGeminiService:
         </formato_saida_esperado>
         """
 
+        self._enviar_log(f"PROMPT AUDITORIA ENVIADO (Contexto + Instruções)", "ai_in")
+
         message = HumanMessage(content=[
             {"type": "text", "text": prompt},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}}
         ])
         
         response = self.llm.invoke([message])
-        return str(response.content)        
+        resposta_texto = str(response.content)
+
+        self._enviar_log(f"XML RECEBIDO: {resposta_texto}", "ai_out")
+        
+        return resposta_texto
