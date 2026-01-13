@@ -27,6 +27,9 @@ class LangchainGeminiService:
         prompt = (
             "Analise esta etiqueta de preço. Retorne APENAS: "
             "<p>Nome do Produto + Peso/Unidade</p> <v>Preço</v> <u>Unidade (kg, un, g)</u>. "
+            "<v>Preço (ex: 14,99)</v> "
+            "<ve>Preço por extenso (ex: quatorze reais e noventa e nove centavos)</ve> "
+            "<u>Unidade (kg, un, g)</u>. "
             "Se não encontrar, retorne <p>N/A</p>"
         )
         
@@ -83,6 +86,7 @@ class LangchainGeminiService:
            - Se houver erro: "PRATELEIRA R$ X,XX | CUPOM R$ Y,YY - DIVERGÊNCIA DE R$ Z,ZZ"
            - Se não encontrar: "PRODUTO NÃO LOCALIZADO NO CUPOM FISCAL"
         </instrucoes_auditoria>
+        12. TOTAL POR EXTENSO: Adicione a tag <te> contendo o valor de <total_nota> por extenso (ex: VINTE REAIS E CINQUENTA CENTAVOS).
 
         <formato_saida_esperado>
         Retorne a resposta estritamente no formato XML abaixo. 
@@ -97,6 +101,7 @@ class LangchainGeminiService:
                 </item>
             </itens>
             <total_nota>VALOR_TOTAL_PAGO_NO_CUPOM</total_nota>
+            <te>VALOR POR EXTENSO AQUI</te>
         </resultado>
         </formato_saida_esperado>
         """

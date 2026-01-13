@@ -21,6 +21,7 @@ Ao final, o usuário fotografa o cupom fiscal. A IA compara os preços registrad
 -   📱 **Interface Responsiva:** Tabela de itens otimizada para visualização em dispositivos móveis.
 -   🗎  **Registro de Atividade (Logs & Tráfego de IA):** Captura e exibição dos logs de execução.
 -   💾 **Exportação de Relatório PDF:** Exporte para o formato .pdf toda a compra efetuada no assistente.
+-   📣 **Audio texto por  extendo;** Produto, valor e total narrados pela ETTS.
 
 ## 📊 Estrutura do Projeto
 -----------------------
@@ -62,6 +63,7 @@ src/
 -   **[Pillow (PIL)](https://www.google.com/search?q=https://python-pillow.org/):** Processamento e conversão de imagens capturadas pela câmera ou upload.
 -   **[Streamlit Back Camera Input](https://www.google.com/search?q=https://github.com/m-v-p-a/streamlit-back-camera-input):** Componente especializado para acesso direto à câmera traseira em dispositivos móveis.
 -   **[FPDF2](https://py-pdf.github.io/fpdf2/):** Geração dinâmica de relatórios em PDF para exportação dos resultados da auditoria.
+- **[ETTS](https://huggingface.co/spaces/innoai/Edge-TTS-Text-to-Speech):** Bilioteca que converte texto em fala usando o Microsoft Edge TTS. Ajuste a velocidade e o tom da fala: 0 é o padrão, valores positivos aumentam a velocidade e valores negativos diminuem.
 
 ## 🚀 Como rodar o projeto
 

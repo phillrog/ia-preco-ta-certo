@@ -5,11 +5,16 @@ from utils.utils import carregar_css, carregar_imagem_base64
 from components.sidebar import renderizar_sidebar, adicionar_log
 from components.tab_adicionar import render_tab_adicionar
 from components.tab_analisar import render_tab_analisar
+from services.voz_edge_service import VozEdgeService
 
 def main():
     st.set_page_config(page_title="IA Preço Tá Certo ?", layout="wide")
     carregar_css('assets/styles.css')
     
+    # Inicializa o serviço de voz no session_state para persistência
+    if "voz_service" not in st.session_state:
+        st.session_state.voz_service = VozEdgeService()
+
     logo_b64 = carregar_imagem_base64('assets/logo_carrinho.png')
     if logo_b64:
         header_html = f"""<div id="logo"><img src="data:image/png;base64,{logo_b64}"><div>
@@ -49,10 +54,11 @@ def main():
     tab1, tab2 = st.tabs(["📸 Adicionar Item", "📋 Analisar compra"])
 
     with tab1:
-        render_tab_adicionar(langchain_gemini_service, adicionar_log)
+        # Passando o serviço de voz para a aba
+        render_tab_adicionar(langchain_gemini_service, st.session_state.voz_service, adicionar_log)
 
     with tab2:
-        render_tab_analisar(langchain_gemini_service, adicionar_log)
+        render_tab_analisar(langchain_gemini_service, st.session_state.voz_service, adicionar_log)
 
 if __name__ == "__main__":
     main()

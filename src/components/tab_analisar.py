@@ -4,9 +4,9 @@ from PIL import Image
 from datetime import datetime
 from streamlit_back_camera_input import back_camera_input
 from utils.utils import formatar_moeda, gerar_pdf_direto
-from controllers.processador_ia import processar_resposta
+from controllers.processador_ia import processar_resposta, valor_por_extenso
 
-def render_tab_analisar(service, adicionar_log_fn):
+def render_tab_analisar(service, voz_service, adicionar_log_fn):
     if st.session_state.lista_dados:
         st.markdown('<div class="sub-header">📋 Itens no Carrinho</div>', unsafe_allow_html=True)
         
@@ -39,9 +39,24 @@ def render_tab_analisar(service, adicionar_log_fn):
                 st.session_state.toast_msg = {"texto": "Item removido!", "icon": "🛒"}
                 st.rerun()
 
-        total_valor = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)
+        total_valor = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)                
         st.markdown(f'<div class="valor-total-flex"><div style="text-align: right; width: 100%;"><span class="label-carrinho">💰 Total no Carrinho</span><br><strong class="valor-carrinho">{formatar_moeda(total_valor)}</strong></div></div>', unsafe_allow_html=True)
         
+        if "ultimo_total_narrado" not in st.session_state or st.session_state.ultimo_total_narrado != total_valor:
+            total_texto_extenso = valor_por_extenso(total_valor)
+            texto_total = f"O total atual no carrinho é de {total_texto_extenso}"
+            
+            audio_total_b64 = voz_service.gerar_audio_base64(texto_total)
+            
+            if audio_total_b64:
+                audio_html = f"""
+                    <audio autoplay="true">
+                        <source src="data:audio/mp3;base64,{audio_total_b64}" type="audio/mp3">
+                    </audio>
+                """
+                st.markdown(audio_html, unsafe_allow_html=True)
+                st.session_state.ultimo_total_narrado = total_valor
+
         df_atualizado = pd.DataFrame(st.session_state.lista_dados).sort_values(by="timestamp", ascending=False)
         ver_idx = st.selectbox("Visualizar foto do item:", range(len(df_atualizado)), format_func=lambda x: f"{df_atualizado.iloc[x]['Produto']} ({df_atualizado.iloc[x]['Adicionado em']})")
         
@@ -65,7 +80,7 @@ def render_tab_analisar(service, adicionar_log_fn):
                     xml = service.comparar_nota_etiquetas(pd.DataFrame(st.session_state.lista_dados), Image.open(nota_f))
                     adicionar_log_fn(f"RESPOSTA ANÁLISE (XML): {xml}", "ai_out")
                     
-                    total_lido, res_c = processar_resposta(xml)
+                    total_lido, res_c, total_extenso = processar_resposta(xml)
                     st.session_state.total_cupom_lido = total_lido
                     st.session_state.res_comp = res_c
                     st.session_state.last_c = nota_f

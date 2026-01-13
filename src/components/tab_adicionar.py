@@ -3,9 +3,9 @@ from PIL import Image
 from datetime import datetime
 from streamlit_back_camera_input import back_camera_input
 from utils.utils import formatar_moeda
-from controllers.processador_ia import extrair_dados_etiqueta
+from controllers.processador_ia import extrair_dados_etiqueta, valor_por_extenso
 
-def render_tab_adicionar(service, adicionar_log_fn):
+def render_tab_adicionar(service, voz_service, adicionar_log_fn):
     total_atual = sum(item["Subtotal Est."] for item in st.session_state.lista_dados)
                 
     header_tab1 = f"""
@@ -30,7 +30,17 @@ def render_tab_adicionar(service, adicionar_log_fn):
                 if "N/A" in res:
                     st.session_state.toast_msg = {"texto": "Não identifiquei o preço.", "icon": "⚠️"}
                 else:
-                    p, v, u = extrair_dados_etiqueta(res)
+                    p, v, u, v_extenso = extrair_dados_etiqueta(res)
+                    
+                    produto_nome = p.group(1).strip() if p else "Produto desconhecido"
+                    preco_valor = v.group(1).strip() if v else "zero"
+                    texto_narra = f"{produto_nome}, {v_extenso}"
+                    
+                    # Chamada síncrona do áudio
+                    audio_b64 = voz_service.gerar_audio_base64(texto_narra)
+                    if audio_b64:
+                        st.session_state.audio_confirmacao = audio_b64
+                    
                     st.session_state.form_data = {
                         "produto": p.group(1).strip() if p else "",
                         "preco": float(v.group(1).replace('R$', '').replace(',', '.').strip()) if v else 0.0,
@@ -43,6 +53,18 @@ def render_tab_adicionar(service, adicionar_log_fn):
             except Exception as e:
                 adicionar_log_fn(f"ERRO: {str(e)}", "error")
 
+    # Bloco de Reprodução de Áudio
+    if "audio_confirmacao" in st.session_state and st.session_state.audio_confirmacao:
+        st.markdown("📣 **Audio disponível**")
+        audio_html = f"""
+            <audio autoplay="true" controls style="width: 100%; height: 40px;">
+                <source src="data:audio/mp3;base64,{st.session_state.audio_confirmacao}" type="audio/mp3">
+            </audio>
+        """
+        st.markdown(audio_html, unsafe_allow_html=True)
+        st.session_state.audio_confirmacao = None
+        del st.session_state.audio_confirmacao
+        
     with st.form("confirm_form", clear_on_submit=True):
         nome_in = st.text_input("Produto", value=st.session_state.form_data["produto"])
         c1, c2, c3 = st.columns([2, 1, 1])

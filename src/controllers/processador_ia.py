@@ -4,7 +4,10 @@ def extrair_dados_etiqueta(res_texto):
     p = re.search(r'<p>(.*?)</p>', res_texto, re.I|re.S)
     v = re.search(r'<v>(.*?)</v>', res_texto, re.I|re.S)
     u = re.search(r'<u>(.*?)</u>', res_texto, re.I|re.S)
-    return p, v, u
+    ve = re.search(r'<ve>(.*?)</ve>', res_texto, re.I|re.S)
+    v_extenso = ve.group(1).strip() if ve else ""
+    
+    return p, v, u, v_extenso
 
 def processar_resposta(xml):
     # Extração do Total do Cupom
@@ -32,4 +35,21 @@ def processar_resposta(xml):
             "Status": status_texto, 
             "Observação": d.group(1).strip() if d else ""
         })
-    return total_cupom_lido, res_c
+        
+    match_extenso = re.search(r'<te>(.*?)</te>', xml, re.I|re.S)
+    total_extenso = match_extenso.group(1).strip() if match_extenso else ""
+    return total_cupom_lido, res_c, total_extenso
+
+def valor_por_extenso(valor_float):
+    """Converte um valor float para uma string amigável para narração."""
+    try:
+        # Separa reais de centavos
+        reais = int(valor_float)
+        centavos = int(round((valor_float - reais) * 100))
+        
+        texto_reais = f"{reais} {'real' if reais == 1 else 'reais'}"
+        texto_centavos = f" e {centavos} centavos" if centavos > 0 else ""
+        
+        return f"{texto_reais}{texto_centavos}"
+    except:
+        return "valor não identificado"
